@@ -6,7 +6,7 @@ import { ChildAppTypes } from '@/main/helpers/constant'
  * @returns {*}
  */
 export function filterServerList(childAppList) {
-    return childAppList.filter(item => isRealServer(item.Type))
+    return childAppList.filter((item) => isRealServer(item.Type))
 }
 
 export function isRealServer(type) {

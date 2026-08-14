@@ -17,11 +17,11 @@ export default class GetPath {
      */
     static getExePath() {
         if (process.type === 'renderer') {
-            if (isWindows){
+            if (isWindows) {
                 return process.execPath
-            }else if(isMacOS){
+            } else if (isMacOS) {
                 //Applications/EServer.app/Contents/Frameworks/EServer Helper (Renderer).app/Contents/MacOS/EServer Helper (Renderer)
-                return path.join(process.execPath,`../../../../../MacOS/${APP_NAME}`)
+                return path.join(process.execPath, `../../../../../MacOS/${APP_NAME}`)
             }
             return ''
         } else {

@@ -30,13 +30,13 @@ export default class HomeService {
                     () => item.errMsg,
                     (errMsg) => {
                         if (errMsg) {
-                            MessageBox.error(errMsg, t('Error starting server!',[item.Name]))
+                            MessageBox.error(errMsg, t('Error starting server!', [item.Name]))
                         }
                     }
                 )
             }
         } catch (error) {
-            MessageBox.error(error.message ?? error, t('Error starting server!',[item.Name]))
+            MessageBox.error(error.message ?? error, t('Error starting server!', [item.Name]))
         }
         item.btnLoading = false
     }
@@ -57,7 +57,7 @@ export default class HomeService {
                 item.isRunning = ProcessExtend.pidIsRunning(item.pid)
             }
         } catch (error) {
-            MessageBox.error(error.message ?? error, t('Error stopping server!',[item.Name]))
+            MessageBox.error(error.message ?? error, t('Error stopping server!', [item.Name]))
         }
         item.btnLoading = false
     }
@@ -76,12 +76,12 @@ export default class HomeService {
             }
 
             if (item.isRunning) {
-                throw new Error(t('The server was not stopped successfully!',[item.Name]))
+                throw new Error(t('The server was not stopped successfully!', [item.Name]))
             }
 
             await ServerControl.start(item)
         } catch (error) {
-            MessageBox.error(error.message ?? error, t('Error starting server!',[item.Name]))
+            MessageBox.error(error.message ?? error, t('Error starting server!', [item.Name]))
         }
         item.btnLoading = false
     }
@@ -91,6 +91,6 @@ export default class HomeService {
     }
 
     static oneClickStop() {
-        OneClick.handle(HomeService.stopServerClick, serverList.value)
+        OneClick.handle(HomeService.stopServerClick, serverList.value, true)
     }
 }

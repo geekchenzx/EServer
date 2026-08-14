@@ -1,10 +1,10 @@
 import { debugLog } from '@/main/utils/utils'
-import ProcessExtend from "@/main/utils/ProcessExtend";
-import ChildApp from "@/main/services/childApp/ChildApp";
-import { parseTemplateStrings} from "@/shared/utils/utils";
-import child_process from "child_process";
-import path from "path";
-import FileUtil from "@/main/utils/FileUtil";
+import ProcessExtend from '@/main/utils/ProcessExtend'
+import ChildApp from '@/main/services/childApp/ChildApp'
+import { parseTemplateStrings } from '@/shared/utils/utils'
+import child_process from 'child_process'
+import path from 'path'
+import FileUtil from '@/main/utils/FileUtil'
 import GetDataPath from '@/shared/helpers/GetDataPath'
 
 export default class ServerControl {
@@ -17,7 +17,7 @@ export default class ServerControl {
         const itemMap = ServerControl.parseServerFields(item)
         const ctrlProcessPath = ServerControl.getControlProcessPath(itemMap)
         const workDir = item.IsCustom ? path.dirname(ctrlProcessPath) : ChildApp.getDir(item)
-        if (!await FileUtil.Exists(ctrlProcessPath)) {
+        if (!(await FileUtil.Exists(ctrlProcessPath))) {
             throw new Error(`${ctrlProcessPath} 文件不存在！`)
         }
         item.isRunning = true
@@ -29,6 +29,13 @@ export default class ServerControl {
         childProcess.stderr.on('data', (data) => {
             debugLog('stderr data', data?.toString())
             item.errMsg = data?.toString()
+        })
+
+        childProcess.on('error', (err) => {
+            debugLog('spawn error', err?.toString())
+            item.isRunning = false
+            item.pid = undefined
+            item.errMsg = err?.toString()
         })
 
         childProcess.on('close', (code) => {
@@ -74,7 +81,7 @@ export default class ServerControl {
         const fields = ['ConfPath', 'ServerConfPath', 'ServerProcessPath', 'ControlProcessPath', 'StartServerArgs', 'StopServerArgs']
         const varMap = {
             WorkDir: workDir.replaceSlash(),
-            EtcDir: path.join(etcDir, item.DirName??'').replaceSlash(),
+            EtcDir: path.join(etcDir, item.DirName ?? '').replaceSlash(),
             ServerPort: item.ServerPort
         }
         const itemMap = {}
@@ -82,7 +89,8 @@ export default class ServerControl {
             if (Object.hasOwn(item, field)) itemMap[field] = item[field]
         }
 
-        for (let i = 0; i < 3; i++) { //最多解析嵌套的层数为3层
+        for (let i = 0; i < 3; i++) {
+            //最多解析嵌套的层数为3层
             for (const field in itemMap) {
                 itemMap[field] = parseTemplateStrings(itemMap[field], { ...itemMap, ...varMap })
             }

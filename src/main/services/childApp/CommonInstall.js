@@ -1,13 +1,13 @@
-import ChildAppExtend from "@/main/services/childApp/ChildAppExtend";
-import ChildAppInit from "@/main/services/childApp/ChildAppInit";
-import DirUtil from "@/main/utils/DirUtil";
+import ChildAppExtend from '@/main/services/childApp/ChildAppExtend'
+import ChildAppInit from '@/main/services/childApp/ChildAppInit'
+import DirUtil from '@/main/utils/DirUtil'
 import { extract7z, extractTar, extractZip } from '@/main/utils/extract'
 import GetDataPath from '@/shared/helpers/GetDataPath'
 
 export default class CommonInstall {
     static async extract(filePath, dest) {
-        if (!await DirUtil.Exists(dest)) {
-            await DirUtil.Create(dest);
+        if (!(await DirUtil.Exists(dest))) {
+            await DirUtil.Create(dest)
         }
         if (filePath.endsWith('.zip')) {
             await extractZip(filePath, dest)
@@ -23,7 +23,8 @@ export default class CommonInstall {
         const ownEtcExists = await DirUtil.Exists(GetDataPath.getOwnEtcDir(appItem.DirName))
         await ChildAppInit.initEtcFiles(appItem)
 
-        if (!ownEtcExists) { //虽然一开始ownEtc不存在，但是initEtcFiles会创建ownEtc
+        if (!ownEtcExists) {
+            //虽然一开始ownEtc不存在，但是initEtcFiles会创建ownEtc
             const dirName = appItem.DirName
             if (dirName.match(/^mysql-[.\d]+$/)) {
                 const version = ChildAppExtend.getMysqlVersion(dirName)

@@ -27,7 +27,7 @@ export default class EnvWindows {
      * @returns {Promise<string>}
      */
     static async getVarStr(varName) {
-        const commandStr = `[Environment]::GetEnvironmentVariable('${varName}','User')`
+        const commandStr = `[Environment]::GetEnvironmentVariable('${EnvWindows.escape(varName)}','User')`
         return (await Command.exec(commandStr, { shell: PowerShell })).trim()
     }
 
@@ -38,7 +38,16 @@ export default class EnvWindows {
      * @returns {Promise<void>}
      */
     static async setVarStr(varName, varVal) {
-        const commandStr = `[Environment]::SetEnvironmentVariable('${varName}','${varVal}','User')`
+        const commandStr = `[Environment]::SetEnvironmentVariable('${EnvWindows.escape(varName)}','${EnvWindows.escape(varVal)}','User')`
         await Command.exec(commandStr, { shell: PowerShell })
+    }
+
+    /**
+     * PowerShell单引号字符串转义：' -> ''
+     * @param str {string}
+     * @returns {string}
+     */
+    static escape(str) {
+        return String(str).replace(/'/g, "''")
     }
 }

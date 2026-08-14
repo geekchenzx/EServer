@@ -1,6 +1,24 @@
-import {Modal} from 'ant-design-vue';
-import {createVNode} from "vue";
+import { Modal } from 'ant-design-vue'
+import { createTextVNode, createVNode } from 'vue'
 import { t } from '@/renderer/utils/i18n'
+
+const escapeHtml = (str) =>
+    String(str ?? '')
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#39;')
+
+const toLines = (str) => {
+    const escaped = escapeHtml(str).split('\n')
+    const nodes = []
+    escaped.forEach((line, i) => {
+        if (i > 0) nodes.push(createVNode('br'))
+        nodes.push(createTextVNode(line))
+    })
+    return createVNode('div', null, nodes)
+}
 
 export default class MessageBox {
     /**
@@ -10,27 +28,27 @@ export default class MessageBox {
      * @returns {Promise<boolean>}
      */
     static async info(message, title) {
-        title = title ?? t('Info');
+        title = title ?? t('Info')
         let options = {
             title: title,
-            content: createVNode('div', {innerHTML: message.replaceAll("\n", "<br/>")})
+            content: toLines(message)
         }
-        let result = true;
+        let result = true
 
         await new Promise((resolve, reject) => {
             options = Object.assign(options, {
                 centered: true,
                 onOk() {
-                    resolve(true);
+                    resolve(true)
                 },
                 onCancel() {
-                    reject(false);
-                },
+                    reject(false)
+                }
             })
-            Modal.info(options);
-        }).catch(() => result = false);
+            Modal.info(options)
+        }).catch(() => (result = false))
 
-        return result;
+        return result
     }
 
     /**
@@ -40,27 +58,27 @@ export default class MessageBox {
      * @returns {Promise<boolean>}
      */
     static async error(message, title) {
-        title = title ?? t('Error');
+        title = title ?? t('Error')
         let options = {
             title: title,
-            content: createVNode('div', {innerHTML: message.replaceAll("\n", "<br/>")})
+            content: toLines(message)
         }
-        let result = true;
+        let result = true
 
         await new Promise((resolve, reject) => {
             options = Object.assign(options, {
                 centered: true,
                 onOk() {
-                    resolve(true);
+                    resolve(true)
                 },
                 onCancel() {
-                    reject(false);
-                },
+                    reject(false)
+                }
             })
-            Modal.error(options);
-        }).catch(() => result = false);
+            Modal.error(options)
+        }).catch(() => (result = false))
 
-        return result;
+        return result
     }
 
     /**
@@ -70,53 +88,53 @@ export default class MessageBox {
      * @returns {Promise<boolean>}
      */
     static async warning(message, title) {
-        title = title ?? t('Warning');
+        title = title ?? t('Warning')
         let options = {
             title: title,
-            content: createVNode('div', {innerHTML: message.replaceAll("\n", "<br/>")})
+            content: toLines(message)
         }
-        let result = true;
+        let result = true
 
         await new Promise((resolve, reject) => {
             options = Object.assign(options, {
                 centered: true,
                 onOk() {
-                    resolve(true);
+                    resolve(true)
                 },
                 onCancel() {
-                    reject(false);
-                },
+                    reject(false)
+                }
             })
-            Modal.warning(options);
-        }).catch(() => result = false);
+            Modal.warning(options)
+        }).catch(() => (result = false))
 
-        return result;
+        return result
     }
 
     /**
      * @param options {object}
      * @returns {Promise<boolean>}
      */
-    static async confirm(options={}) {
-        options.title = options.title ??  t('Confirm');
+    static async confirm(options = {}) {
+        options.title = options.title ?? t('Confirm')
         if (typeof options.content === 'string') {
-            options.content = createVNode('div', {innerHTML: options.content?.replaceAll("\n", "<br/>")})
+            options.content = toLines(options.content)
         }
-        let result = true;
+        let result = true
 
         await new Promise((resolve, reject) => {
             options = Object.assign(options, {
                 centered: true,
                 onOk() {
-                    resolve(true);
+                    resolve(true)
                 },
                 onCancel() {
-                    reject(false);
-                },
+                    reject(false)
+                }
             })
-            Modal.confirm(options);
-        }).catch(() => result = false);
+            Modal.confirm(options)
+        }).catch(() => (result = false))
 
-        return result;
+        return result
     }
 }

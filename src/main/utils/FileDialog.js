@@ -1,6 +1,6 @@
 import { dialog } from 'electron'
 import { isMacOS, isWindows } from '@/main/utils/utils'
-import MainWindow from "@/main/MainWindow";
+import MainWindow from '@/main/MainWindow'
 
 export default class FileDialog {
     static showOpenDirectory(defaultPath = null) {
@@ -9,12 +9,12 @@ export default class FileDialog {
         }
         if (defaultPath) {
             if (isWindows) {
-                defaultPath = defaultPath.replaceAll("/", "\\");
+                defaultPath = defaultPath.replaceAll('/', '\\')
             }
-            options.defaultPath = defaultPath;
+            options.defaultPath = defaultPath
         }
-        let res = dialog.showOpenDialogSync(MainWindow.getInstance(),options);
-        return res ? res[0] : null;
+        let res = dialog.showOpenDialogSync(MainWindow.getInstance(), options)
+        return res ? res[0] : null
     }
 
     static showOpenFile(defaultPath = null, filters = []) {
@@ -28,17 +28,17 @@ export default class FileDialog {
             }
             options.defaultPath = defaultPath
         }
-        let res = dialog.showOpenDialogSync(MainWindow.getInstance(),options)
+        let res = dialog.showOpenDialogSync(MainWindow.getInstance(), options)
         return res ? res[0] : null
     }
 
     static showOpenApp(defaultPath = null) {
-        let filters;
+        let filters
         if (isWindows) {
-            filters = [{name: '应用程序', extensions: ['exe']}];
+            filters = [{ name: '应用程序', extensions: ['exe'] }]
         }
         if (isMacOS) {
-            filters = [{name: '应用程序', extensions: ['app']}];
+            filters = [{ name: '应用程序', extensions: ['app'] }]
         }
         let options = {
             properties: ['openFile'],
@@ -48,15 +48,13 @@ export default class FileDialog {
             if (isWindows) {
                 defaultPath = defaultPath.replaceAll('/', '\\')
             }
-            options.defaultPath = defaultPath;
-        }else {
-            if(isMacOS){
-                options.defaultPath = '/Applications';
+            options.defaultPath = defaultPath
+        } else {
+            if (isMacOS) {
+                options.defaultPath = '/Applications'
             }
         }
-        let res = dialog.showOpenDialogSync(MainWindow.getInstance(),options);
-        return res ? res[0] : null;
+        let res = dialog.showOpenDialogSync(MainWindow.getInstance(), options)
+        return res ? res[0] : null
     }
 }
-
-

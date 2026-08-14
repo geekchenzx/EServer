@@ -1,8 +1,7 @@
-import ChildApp from "@/main/services/childApp/ChildApp";
-import FileUtil from "@/main/utils/FileUtil";
-import CommonInstall from "@/main/services/childApp/CommonInstall";
+import ChildApp from '@/main/services/childApp/ChildApp'
+import FileUtil from '@/main/utils/FileUtil'
+import CommonInstall from '@/main/services/childApp/CommonInstall'
 import PathExt from '@/shared/utils/PathExt'
-
 
 export default class LocalInstall {
     /**
@@ -17,23 +16,25 @@ export default class LocalInstall {
         const dest = appItem ? ChildApp.getTypeDir(appItem.Type) : null
         if (!dest) return
         await CommonInstall.extract(filePath, dest)
-        if (deleteSrc){
+        if (deleteSrc) {
             await FileUtil.Delete(filePath)
         }
         await CommonInstall.configure(appItem)
     }
 
     static async installMultiple(files) {
-        await Promise.all(files.map(async file => {
-            await LocalInstall.install(file,true);
-        }));
+        await Promise.all(
+            files.map(async (file) => {
+                await LocalInstall.install(file, true)
+            })
+        )
     }
 
     static getDirName(filePath) {
-        let dirName = PathExt.GetFileNameWithoutExt(filePath);
+        let dirName = PathExt.GetFileNameWithoutExt(filePath)
         if (dirName.endsWith('.tar')) {
-            dirName = PathExt.GetFileNameWithoutExt(dirName);
+            dirName = PathExt.GetFileNameWithoutExt(dirName)
         }
-        return dirName;
+        return dirName
     }
 }

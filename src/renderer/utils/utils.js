@@ -10,6 +10,5 @@ export function createAsyncComponent(importPath, module = null) {
     if (!module) {
         return defineAsyncComponent(() => importPath)
     }
-    return defineAsyncComponent(async () => (await importPath)[module]
-    )
+    return defineAsyncComponent(async () => (await importPath)[module])
 }

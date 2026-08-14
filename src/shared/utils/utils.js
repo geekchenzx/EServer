@@ -20,19 +20,21 @@ export function extendPrototype() {
      * @returns {Promise<*[]>}
      */
     Array.prototype.filterAsync = async function (asyncFunc) {
-        const results = await Promise.all(this.map(async (item) => {
-            const include = await asyncFunc(item)
-            return { item, include }
-        }))
+        const results = await Promise.all(
+            this.map(async (item) => {
+                const include = await asyncFunc(item)
+                return { item, include }
+            })
+        )
         return results.filter((v) => v.include).map((v) => v.item)
     }
 }
 
 export function enumGetName(enumObj, val) {
-    let names = Object.keys(enumObj);
+    let names = Object.keys(enumObj)
     for (const name of names) {
         if (enumObj[name] === val) {
-            return name;
+            return name
         }
     }
 }
@@ -48,7 +50,7 @@ export function parseTemplateStrings(varStr, varMap) {
 }
 
 export function sleep(ms) {
-    return new Promise(resolve => setTimeout(resolve, ms))
+    return new Promise((resolve) => setTimeout(resolve, ms))
 }
 
 /**

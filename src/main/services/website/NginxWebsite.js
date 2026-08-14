@@ -89,6 +89,11 @@ export default class NginxWebsite {
     }
 
     async setBasicInfo(websiteInfo) {
+        if (websiteInfo.extraServerName) {
+            Nginx.checkServerName(websiteInfo.extraServerName)
+        }
+        const port = Nginx.checkPort(websiteInfo.port)
+        Nginx.checkRootPath(websiteInfo.rootPath)
         let text = this.confText;
         let serverNameStr;
         let extraServerName = websiteInfo.extraServerName
@@ -102,7 +107,7 @@ export default class NginxWebsite {
             serverNameStr = `server_name ${this.serverName};`;
         }
         text = text.replace(/server_name\s+[^\s;]+\s*(.+)?\s*;/, serverNameStr);
-        text = text.replace(/(?<=listen\s+)\d+(?=\s*;)/, websiteInfo.port);
+        text = text.replace(/(?<=listen\s+)\d+(?=\s*;)/, port);
         text = text.replace(/(?<=root\s+)\S+(?=\s*;)/, websiteInfo.rootPath);
         this.confText = text;
         this.setPHPVersion(websiteInfo.phpVersion);

@@ -29,7 +29,7 @@ export default class Env {
         } else {
             text = `#!/bin/bash\n${text} $@`
             if (binName === 'php') {
-                await this.createOtherBinFile(targetPath, 'phpize', 'phpize');
+                await this.createOtherBinFile(targetPath, 'phpize', 'phpize')
             }
         }
         await FileUtil.WriteAll(path, text)
@@ -58,7 +58,7 @@ export default class Env {
     static async deleteOtherBinFile(otherBinName) {
         let path = nodePath.join(GetDataPath.getBinDir(), this.getBinFileName(otherBinName))
         if (await FsUtil.Exists(path)) {
-            await FileUtil.Delete(path);
+            await FileUtil.Delete(path)
         }
     }
 
@@ -68,9 +68,9 @@ export default class Env {
 
     static async switch(enable) {
         if (isMacOS) {
-            await EnvMacOS.switch(enable);
+            await EnvMacOS.switch(enable)
         } else if (isWindows) {
-            await EnvWindows.switch(enable);
+            await EnvWindows.switch(enable)
         }
     }
 }

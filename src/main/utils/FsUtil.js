@@ -39,7 +39,7 @@ export default class FsUtil {
             //Linux symlink 路径哪怕是目录，结尾也不能带/。否则创建符号链接规则变了 或 无法解析获得目标路径
             path = path?.replace(/\/$/, '')
         }
-        return path;
+        return path
     }
 
     /**
@@ -63,7 +63,7 @@ export default class FsUtil {
     }
 
     static async ParseSymbolicLink(path) {
-        if (!await FsUtil.Exists(path)) {
+        if (!(await FsUtil.Exists(path))) {
             return path
         }
         if (await FsUtil.IsSymbolicLink(path)) {

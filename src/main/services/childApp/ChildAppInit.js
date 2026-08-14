@@ -36,21 +36,23 @@ export default class ChildAppInit {
         const ownEctDir = GetDataPath.getOwnEtcDir(appItem.DirName)
         for (const etcName of etcList) {
             const source = nodePath.join(ownAppDir, etcName)
-            if (!await FsUtil.Exists(source)) {
+            if (!(await FsUtil.Exists(source))) {
                 continue //源文件不存在，跳过
             }
 
             const etcPath = nodePath.join(ownEctDir, etcName)
-            if (await FsUtil.Exists(etcPath)) { //已有etc文件
-                if(!await FsUtil.IsSymbolicLink(source)){
+            if (await FsUtil.Exists(etcPath)) {
+                //已有etc文件
+                if (!(await FsUtil.IsSymbolicLink(source))) {
                     await FsUtil.Delete(source) //如果不是符号链接，就删除
                 }
-            } else { //没有etc文件
+            } else {
+                //没有etc文件
                 //这里的dirname不能取ownEctDir，因为etcName可能是/分割的路径
                 await DirUtil.Create(nodePath.dirname(etcPath))
                 await FsUtil.Rename(source, etcPath) //将配置文件移动到etc目录
             }
-            if(!await FsUtil.Exists(source)){
+            if (!(await FsUtil.Exists(source))) {
                 await FsUtil.CreateSymbolicLink(source, etcPath) //在app目录创建符号链接指向etc目录
             }
         }
@@ -60,7 +62,7 @@ export default class ChildAppInit {
         try {
             let path = nodePath.join(GetDataPath.getNginxConfDir(), 'nginx.conf')
             let text = await FileUtil.ReadAll(path)
-            let pattern = /root.+/g
+            let pattern = /^\s*root\s+\S+/gm
             let wwwPath = nodePath.join(GetDataPath.getNginxDir(), 'html').replaceSlash()
             let replaceStr = `root ${wwwPath};`
             text = text.replaceAll(pattern, replaceStr)
@@ -78,7 +80,7 @@ export default class ChildAppInit {
         let path = nodePath.join(GetDataPath.getNginxVhostsDir(), 'localhost_80.conf')
         if (await FileUtil.Exists(path)) {
             let text = await FileUtil.ReadAll(path)
-            let pattern = /root.+/g
+            let pattern = /^\s*root\s+\S+/gm
             let rootPath = nodePath.join(GetDataPath.getWebsiteDir(), 'localhost').replaceSlash()
             let replaceStr = `root ${rootPath};`
             text = text.replaceAll(pattern, replaceStr)
@@ -90,7 +92,7 @@ export default class ChildAppInit {
         let path = nodePath.join(GetDataPath.getNginxVhostsDir(), 'localhost_888.conf')
         if (await FileUtil.Exists(path)) {
             let text = await FileUtil.ReadAll(path)
-            let pattern = /root.+/g
+            let pattern = /^\s*root\s+\S+/gm
             let rootPath = nodePath.join(GetDataPath.getToolTypeDir(), 'phpMyAdmin').replaceSlash()
             let replaceStr = `root ${rootPath};`
             text = text.replaceAll(pattern, replaceStr)
@@ -115,7 +117,7 @@ export default class ChildAppInit {
     static async createPHPFpmConf(version) {
         const etcDir = GetDataPath.getOwnEtcDir(`php-${version}`)
         let confPath = nodePath.join(etcDir, 'etc/php-fpm.conf')
-        if (!await FileUtil.Exists(confPath)) {
+        if (!(await FileUtil.Exists(confPath))) {
             await FileUtil.WriteAll(confPath, Php.getFpmConfTemplate(version))
         }
     }
@@ -134,13 +136,12 @@ export default class ChildAppInit {
 
             if (isWindows) {
                 let i = 0
-                text = text.replace(/(?<=\n);?.?extension_dir\s*=.*/g, match => {
+                text = text.replace(/(?<=\n);?.?extension_dir\s*=.*/g, (match) => {
                     //仅替换第二个
                     return ++i === 2 ? 'extension_dir = "ext"' : match
                 })
 
-                const extArr = ['bz2', 'curl', 'fileinfo', 'mbstring', 'exif', 'mysqli', 'openssl',
-                    'pdo_mysql', 'pdo_odbc', 'soap', 'sockets']
+                const extArr = ['bz2', 'curl', 'fileinfo', 'mbstring', 'exif', 'mysqli', 'openssl', 'pdo_mysql', 'pdo_odbc', 'soap', 'sockets']
 
                 const versionFloat = parseFloat(version)
 
@@ -152,7 +153,7 @@ export default class ChildAppInit {
                     extArr.push('gd2')
                 }
 
-                if (versionFloat >= 8.2){
+                if (versionFloat >= 8.2) {
                     extArr.push('zip')
                 }
 
@@ -199,7 +200,7 @@ export default class ChildAppInit {
      */
     static async initMySQL(version) {
         await this.initMySQLConf(version)
-        if (!await DirUtil.Exists(GetDataPath.getMysqlDataDir(version))) {
+        if (!(await DirUtil.Exists(GetDataPath.getMysqlDataDir(version)))) {
             //如果mysql data目录不存在，初始化生成data目录，并重置密码
             await MySQL.initData(version)
             await MySQL.resetPassword(version)

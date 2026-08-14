@@ -39,7 +39,10 @@ export default class Command {
         }
         debugLog('Command.sudoExec command', command)
 
-        command = `echo '${SettingsExtend.getUserPwd()}' | sudo -S ${command}`
+        //密码（含换行终止符）经base64编码后通过环境变量传入，避免特殊字符破坏shell引号或被日志泄露
+        const pwdB64 = Buffer.from(`${SettingsExtend.getUserPwd()}\n`, 'utf8').toString('base64')
+        const inner = `printf %s "$ESERVER_SUDO_PWD" | base64 -d | sudo -S -p "" ${command}`
+        command = `ESERVER_SUDO_PWD='${pwdB64}' sh -c '${inner.replaceAll(`'`, `'\\''`)}'`
 
         if (!options.encoding) {
             options.encoding = 'utf8'

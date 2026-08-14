@@ -24,14 +24,14 @@ export default class App {
     static async init() {
         const initFile = GetCorePath.getInitFilePath()
 
-        if (!await FileUtil.Exists(initFile)) {
+        if (!(await FileUtil.Exists(initFile))) {
             return
         }
         //SoftwareDir为老的结构
-        const childAppDirExists = await ChildApp.DirExists() ||  await DirUtil.Exists(GetDataPath.getSoftwareDir())
+        const childAppDirExists = (await ChildApp.DirExists()) || (await DirUtil.Exists(GetDataPath.getSoftwareDir()))
 
         if (isMacOS && !isDev) {
-            if (!await DirUtil.Exists(MAC_DATA_DIR)) {
+            if (!(await DirUtil.Exists(MAC_DATA_DIR))) {
                 await DirUtil.Create(MAC_DATA_DIR)
             }
             await this.updateMacDataSubDir(['Library'])
@@ -40,7 +40,8 @@ export default class App {
         await this.moveInitFiles(['downloads', 'www', 'custom'])
         await this.createUserSubDir(['etc', 'childApp', 'database', 'bin', `${TEMP_DIR_NAME}/php`])
 
-        if (!childAppDirExists) { //目录不存在说明是第一次安装，不是覆盖安装
+        if (!childAppDirExists) {
+            //目录不存在说明是第一次安装，不是覆盖安装
             const files = await DirUtil.GetFiles(GetDataPath.getDownloadsDir())
             await LocalInstall.installMultiple(files)
         }
@@ -55,7 +56,7 @@ export default class App {
         }
     }
 
-    static async checkInstall(){
+    static async checkInstall() {
         const appPath = GetPath.getDir()
         if (appPath.includes(' ')) {
             throw new Error('安装路径不能包含空格！')
@@ -65,7 +66,8 @@ export default class App {
             throw new Error('安装路径不能包含中文等汉字！')
         }
 
-        if (isWindows && process.arch === 'x64') { //hmc.getStringRegKey可能在arm64的Windows上有问题
+        if (isWindows && process.arch === 'x64') {
+            //hmc.getStringRegKey可能在arm64的Windows上有问题
             const hmc = require('hmc-win32')
             const semverDiff = require('semver-diff')
             const vcVersion = hmc.getStringRegKey('HKEY_LOCAL_MACHINE', `SOFTWARE\\Microsoft\\DevDiv\\VC\\Servicing\\14.0\\RuntimeMinimum`, 'Version')
@@ -91,7 +93,7 @@ export default class App {
         await this.moveInitFiles(['downloads', 'www', 'custom', 'custom/childApp'])
 
         //目录childApp改名为childApp
-        if (!await ChildApp.DirExists()) {
+        if (!(await ChildApp.DirExists())) {
             needRestart = true
             await FsUtil.Copy(GetDataPath.getSoftwareDir(), GetDataPath.getChildAppDir(), { recursive: true })
         }
@@ -131,11 +133,11 @@ export default class App {
         const coreDir = GetCorePath.getDir()
         for (const dir of dirs) {
             let source = path.join(coreDir, dir)
-            if (!await DirUtil.Exists(source)) {
+            if (!(await DirUtil.Exists(source))) {
                 continue
             }
             let target = path.join(MAC_DATA_DIR, dir)
-            if (!await DirUtil.Exists(target)) {
+            if (!(await DirUtil.Exists(target))) {
                 await DirUtil.Create(target)
             }
             await Command.exec(`rsync -a ${source}/* ${target}`)
@@ -150,7 +152,7 @@ export default class App {
     static async createUserSubDir(dirs) {
         for (const dir of dirs) {
             let p = path.join(GetDataPath.getDir(), dir)
-            if (!await DirUtil.Exists(p)) {
+            if (!(await DirUtil.Exists(p))) {
                 await DirUtil.Create(p)
             }
         }

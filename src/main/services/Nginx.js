@@ -1,15 +1,15 @@
 import nodePath from 'path'
-import GetDataPath from "@/shared/helpers/GetDataPath";
-import NginxWebsite from "@/main/services/website/NginxWebsite";
-import DirUtil from "@/main/utils/DirUtil";
-import FileUtil from "@/main/utils/FileUtil";
+import GetDataPath from '@/shared/helpers/GetDataPath'
+import NginxWebsite from '@/main/services/website/NginxWebsite'
+import DirUtil from '@/main/utils/DirUtil'
+import FileUtil from '@/main/utils/FileUtil'
 import { isWindows, replaceLineBreak } from '@/main/utils/utils'
 import { EOL } from 'os'
 import { CONF_INDENT } from '@/main/helpers/constant'
 import PathExt from '@/shared/utils/PathExt'
 
-const N = EOL; //换行符
-const T = CONF_INDENT; //缩进符
+const N = EOL //换行符
+const T = CONF_INDENT //缩进符
 
 export default class Nginx {
     /**
@@ -19,15 +19,15 @@ export default class Nginx {
      */
     static async getWebsiteList(search = '') {
         let vhostsPath = GetDataPath.getNginxVhostsDir()
-        if (!await DirUtil.Exists(vhostsPath)) {
-            return [];
+        if (!(await DirUtil.Exists(vhostsPath))) {
+            return []
         }
 
         const searchRegx = new RegExp(`.*${search}.*\\.conf$`, 'i')
 
         const files = await DirUtil.GetFiles(vhostsPath, searchRegx, true)
         //根据创建时间倒序
-        files.sort((a,b)=>{
+        files.sort((a, b) => {
             return b.stats.birthtimeMs - a.stats.birthtimeMs
         })
 
@@ -46,13 +46,18 @@ export default class Nginx {
      * @param websiteInfo {WebsiteItem}
      */
     static async addWebsite(websiteInfo) {
-        let serverName = websiteInfo.serverName;
-        let serverNameStr = websiteInfo.extraServerName ? `${serverName} ${websiteInfo.extraServerName}` : serverName;
-        let confName = this.getWebsiteConfName(websiteInfo.serverName, websiteInfo.port);
-        let confPath = this.getWebsiteConfPath(confName);
-        let errorLogOffValue = this.getErrorLogOffValue();
-        let confText =
-            `server
+        Nginx.checkServerName(websiteInfo.serverName)
+        if (websiteInfo.extraServerName) {
+            Nginx.checkServerName(websiteInfo.extraServerName)
+        }
+        const port = Nginx.checkPort(websiteInfo.port)
+        Nginx.checkRootPath(websiteInfo.rootPath)
+        let serverName = websiteInfo.serverName
+        let serverNameStr = websiteInfo.extraServerName ? `${serverName} ${websiteInfo.extraServerName}` : serverName
+        let confName = this.getWebsiteConfName(websiteInfo.serverName, port)
+        let confPath = this.getWebsiteConfPath(confName)
+        let errorLogOffValue = this.getErrorLogOffValue()
+        let confText = `server
 {
     listen ${websiteInfo.port};
     server_name ${serverNameStr};
@@ -108,34 +113,34 @@ export default class Nginx {
 
     access_log  logs/${PathExt.GetFileNameWithoutExt(confName)}.access.log;
     error_log  logs/${PathExt.GetFileNameWithoutExt(confName)}.error.log;
-}`;
+}`
 
         confText = replaceLineBreak(confText)
 
-        await FileUtil.WriteAll(confPath, confText);
+        await FileUtil.WriteAll(confPath, confText)
 
-        const website = new NginxWebsite(confName);
-        await website.init();
-        website.setPHPVersion(websiteInfo.phpVersion);
-        website.setExtraInfo({ syncHosts: websiteInfo.syncHosts });
-        await website.save();
+        const website = new NginxWebsite(confName)
+        await website.init()
+        website.setPHPVersion(websiteInfo.phpVersion)
+        website.setExtraInfo({ syncHosts: websiteInfo.syncHosts })
+        await website.save()
 
         //创建URL重写文件
-        let rewritePath = Nginx.getWebsiteRewriteConfPath(confName);
-        if (!await FileUtil.Exists(rewritePath)) {
-            await FileUtil.WriteAll(rewritePath, '');
+        let rewritePath = Nginx.getWebsiteRewriteConfPath(confName)
+        if (!(await FileUtil.Exists(rewritePath))) {
+            await FileUtil.WriteAll(rewritePath, '')
         }
     }
 
     static async delWebsite(confName) {
-        let confPath = this.getWebsiteConfPath(confName);
+        let confPath = this.getWebsiteConfPath(confName)
         if (await FileUtil.Exists(confPath)) {
-            await FileUtil.Delete(confPath);
+            await FileUtil.Delete(confPath)
         }
 
-        let rewritePath = this.getWebsiteRewriteConfPath(confName);
+        let rewritePath = this.getWebsiteRewriteConfPath(confName)
         if (await FileUtil.Exists(rewritePath)) {
-            await FileUtil.Delete(rewritePath);
+            await FileUtil.Delete(rewritePath)
         }
     }
 
@@ -162,7 +167,40 @@ export default class Nginx {
     }
 
     static getWebsiteConfName(serverName, port) {
-        return `${serverName}_${port}.conf`;
+        return `${serverName}_${port}.conf`
+    }
+
+    /**
+     * 校验域名，防止注入nginx配置（; 换行 空格 等特殊字符）
+     * @param serverName {string}
+     */
+    static checkServerName(serverName) {
+        if (typeof serverName !== 'string' || !/^[-a-zA-Z0-9.*]+$/.test(serverName) || serverName.length > 253) {
+            throw new Error(`Invalid server name: ${serverName}`)
+        }
+    }
+
+    /**
+     * 校验端口，强转数字并检查范围
+     * @param port {number|string}
+     * @returns {number}
+     */
+    static checkPort(port) {
+        const num = Number(port)
+        if (!Number.isInteger(num) || num < 1 || num > 65535) {
+            throw new Error(`Invalid port: ${port}`)
+        }
+        return num
+    }
+
+    /**
+     * 校验根路径，防止路径穿越/注入配置（; 换行 空格 等）
+     * @param rootPath {string}
+     */
+    static checkRootPath(rootPath) {
+        if (typeof rootPath !== 'string' || rootPath.includes(';') || /[\r\n]/.test(rootPath) || rootPath.includes(' ') || rootPath.length === 0 || rootPath.length > 500) {
+            throw new Error(`Invalid root path: ${rootPath}`)
+        }
     }
 
     static getWebsiteRewriteConfPath(confName) {
@@ -185,13 +223,13 @@ export default class Nginx {
      */
     static async getRewriteRuleList() {
         let rewritePath = GetDataPath.getNginxRewriteDir()
-        if (!await DirUtil.Exists(rewritePath)) {
-            return [];
+        if (!(await DirUtil.Exists(rewritePath))) {
+            return []
         }
-        let files = await DirUtil.GetFiles(rewritePath, '.conf');
-        return files.map(name => {
+        let files = await DirUtil.GetFiles(rewritePath, '.conf')
+        return files.map((name) => {
             return PathExt.GetFileNameWithoutExt(name)
-        });
+        })
     }
 
     /**
@@ -201,10 +239,10 @@ export default class Nginx {
      */
     static async getRewriteByRule(ruleName) {
         let rewritePath = nodePath.join(GetDataPath.getNginxRewriteDir(), `${ruleName}.conf`)
-        if (!await FileUtil.Exists(rewritePath)) {
-            return '';
+        if (!(await FileUtil.Exists(rewritePath))) {
+            return ''
         }
-        return await FileUtil.ReadAll(rewritePath);
+        return await FileUtil.ReadAll(rewritePath)
     }
 
     /**
@@ -212,12 +250,12 @@ export default class Nginx {
      * @param path
      * @returns {number}
      */
-    static getPortByConfPath(path){
+    static getPortByConfPath(path) {
         return Number(PathExt.GetFileNameWithoutExt(path).split('_')[1])
     }
 
-    static getErrorLogOffValue(){
-        return isWindows ? 'nul' : '/dev/null';
+    static getErrorLogOffValue() {
+        return isWindows ? 'nul' : '/dev/null'
     }
 
     static getSslConfText(certPath, ketPath) {

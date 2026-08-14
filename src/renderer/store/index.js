@@ -30,13 +30,13 @@ export const useMainStore = defineStore('main', {
                 selectedType: '',
                 listened: false
             },
-            noticeList:[]
+            noticeList: []
         }
     },
     getters: {
         //server列表，包含自定义的
         serverList(state) {
-            return filterServerList([...state.installedChildAppList,...state.customChildAppList])
+            return filterServerList([...state.installedChildAppList, ...state.customChildAppList])
         }
     },
     actions: {
@@ -46,18 +46,20 @@ export const useMainStore = defineStore('main', {
         },
         async refreshChildAppList() {
             const list = await ChildApp.getList()
-            this.childAppList = await Promise.all(list.map(async item => {
-                const Installed = await ChildApp.IsInstalled(item)
-                return { ...item, Installed }
-            }))
+            this.childAppList = await Promise.all(
+                list.map(async (item) => {
+                    const Installed = await ChildApp.IsInstalled(item)
+                    return { ...item, Installed }
+                })
+            )
             this.refreshInstalledList()
         },
-        async refreshInstalledList(){
-            this.installedChildAppList = this.childAppList.filter(item => item.Installed)
+        async refreshInstalledList() {
+            this.installedChildAppList = this.childAppList.filter((item) => item.Installed)
         },
         async refreshCustomChildAppList() {
             let customChildAppList = await CustomChildApp.getList() //自定义子应用，不判断是否已安装
-            customChildAppList = customChildAppList.map(item => ({ ...item, IsCustom: true }))
+            customChildAppList = customChildAppList.map((item) => ({ ...item, IsCustom: true }))
             this.customChildAppList = customChildAppList
         },
         async setSettings(key, beforeFunc = null) {
@@ -84,7 +86,7 @@ export const useMainStore = defineStore('main', {
                 MessageBox.error(error.message ?? error, t('errorOccurredDuring', [t('set')]))
             }
         },
-         changeTheme(modeStr, primaryColor) {
+        changeTheme(modeStr, primaryColor) {
             const isDark = modeStr === 'dark' || (modeStr === 'system' && SystemTheme.isDarkModel())
             let customToken = {
                 colorBgLayout: colorConst.light.bgColor,

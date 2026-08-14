@@ -27,24 +27,30 @@ export default class Extension {
             {
                 name: 'memcache',
                 fileName: 'memcache.so'
-            }, {
+            },
+            {
                 name: 'redis',
                 fileName: 'redis.so'
-            }, {
+            },
+            {
                 name: 'swoole',
                 fileName: 'swoole.so'
-            }, {
+            },
+            {
                 name: 'mongodb',
                 fileName: 'mongodb.so'
-            }, {
+            },
+            {
                 name: 'xdebug',
                 fileName: 'xdebug.so',
                 isZend: true
-            }, {
+            },
+            {
                 name: 'imagick',
                 fileName: 'imagick.so',
                 needX64Brew: true
-            },{
+            },
+            {
                 name: 'xlswriter',
                 fileName: 'xlswriter.so'
             }
@@ -52,7 +58,7 @@ export default class Extension {
     }
 
     static isNeedX64Brew(extName) {
-        return this.getSimpleList().find(item => item.nam === extName)?.needX64Brew
+        return this.getSimpleList().find((item) => item.nam === extName)?.needX64Brew
     }
 
     static getSimpleListForWindows() {
@@ -60,17 +66,21 @@ export default class Extension {
             {
                 name: 'memcache',
                 fileName: 'php_memcache.dll'
-            }, {
+            },
+            {
                 name: 'redis',
                 fileName: 'php_redis.dll'
-            }, {
+            },
+            {
                 name: 'mongodb',
                 fileName: 'php_mongodb.dll'
-            }, {
+            },
+            {
                 name: 'xdebug',
                 fileName: 'php_xdebug.dll',
                 isZend: true
-            }, {
+            },
+            {
                 name: 'xlswriter',
                 fileName: 'php_xlswriter.dll'
             }
@@ -79,7 +89,7 @@ export default class Extension {
 
     static getFileName(extName) {
         let list = this.getSimpleList()
-        return list.find(v => v.name === extName)?.fileName
+        return list.find((v) => v.name === extName)?.fileName
     }
 
     static getVersion(extName, phpVersion) {
@@ -143,7 +153,7 @@ export default class Extension {
                     return '3.4.2'
                 }
             case 'xlswriter':
-                if (phpVersion >= 7.0){
+                if (phpVersion >= 7.0) {
                     return '1.5.7'
                 }
         }
@@ -160,7 +170,8 @@ export default class Extension {
                     return '3.0.8'
                 } else if (phpVersion >= 7.0 && phpVersion <= 7.1) {
                     return null
-                } else if (phpVersion >= 7.2 && phpVersion <= 7.4) { //todo 7.2的包改官方的 memcache扩展
+                } else if (phpVersion >= 7.2 && phpVersion <= 7.4) {
+                    //todo 7.2的包改官方的 memcache扩展
                     return '4.0.5.2'
                 } else if (phpVersion <= 8.3) {
                     return '8.2'
@@ -223,7 +234,7 @@ export default class Extension {
      * @param extName  {string}
      * @returns {string}
      */
-    static getInstallScriptPath(extName='') {
+    static getInstallScriptPath(extName = '') {
         if (isWindows) {
             return path.join(GetCorePath.getScriptDir(), `php/common.ps1`)
         } else {

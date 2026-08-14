@@ -36,7 +36,7 @@ async function createMainWindow() {
             sandbox: false,
             nodeIntegration: true,
             contextIsolation: false,
-            webSecurity: false,
+            webSecurity: false
         }
     })
 

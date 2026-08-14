@@ -22,14 +22,12 @@ export default class ProcessExtend {
             }
             if (isWindows) {
                 //taskkill杀不存在的进程会有标准错误，从而引发异常
-                await Command.exec(`taskkill /f /t /pid ${pid}`);
+                await Command.exec(`taskkill /f /t /pid ${pid}`)
             } else {
-                await Command.sudoExec(`kill ${pid}`);
+                await Command.sudoExec(`kill ${pid}`)
             }
             // eslint-disable-next-line no-empty
-        } catch {
-
-        }
+        } catch {}
     }
 
     static async getParentPid(pid) {
@@ -57,23 +55,21 @@ export default class ProcessExtend {
         try {
             if (isWindows) {
                 //taskkill杀不存在的进程会有标准错误，从而引发异常
-                await Command.exec(`taskkill /f /t /im ${name}.exe`);
+                await Command.exec(`taskkill /f /t /im ${name}.exe`)
             } else {
                 //pkill杀不存在的进程会有标准错误，从而引发异常
-                await Command.sudoExec(`pkill ${name}`);
+                await Command.sudoExec(`pkill ${name}`)
             }
             // eslint-disable-next-line no-empty
-        } catch {
-
-        }
+        } catch {}
     }
 
     static pidIsRunning(pid) {
         try {
-            process.kill(pid, 0);
-            return true;
+            process.kill(pid, 0)
+            return true
         } catch (e) {
-            return false;
+            return false
         }
     }
 
@@ -125,13 +121,13 @@ export default class ProcessExtend {
      * @param options {object}
      * @returns {Promise<[]|{path: *, name: *, pid: *, ppid: *}[]>}
      */
-    static async getList(options={}) {
+    static async getList(options = {}) {
         if (isMacOS) {
-            return await this.getListForMacOS(options);
+            return await this.getListForMacOS(options)
         } else if (isWindows) {
-            return await this.getListForWindows(options);
+            return await this.getListForWindows(options)
         }
-        return [];
+        return []
     }
 
     static async getListForMacOS(options = {}) {
@@ -150,24 +146,23 @@ export default class ProcessExtend {
         command += `|grep -F -v '.dylib'|awk '{print $1,$2,$3,$10}'`
         try {
             let str = await Command.sudoExec(command)
-            str = str.trim();
-            if(!str){
-                return [];
+            str = str.trim()
+            if (!str) {
+                return []
             }
-            let list = str.split('\n');
+            let list = str.split('\n')
 
-            list = list.map(item => {
-                let arr = item.split(' ');
-                let name, pid, ppid, path;
-                [name, pid, ppid, path] = arr;
-                return {name, pid, ppid, path};
-            });
+            list = list.map((item) => {
+                let arr = item.split(' ')
+                let name, pid, ppid, path
+                ;[name, pid, ppid, path] = arr
+                return { name, pid, ppid, path }
+            })
 
-            return list;
+            return list
         } catch (e) {
             return []
         }
-
     }
 
     static async getListForWindows(options = {}) {
@@ -188,15 +183,15 @@ export default class ProcessExtend {
                 return []
             }
             let list = str.split(/\r?\n\r?\n/)
-            list = list.map(item => {
+            list = list.map((item) => {
                 let lineArr = item.split(/\r?\n/)
 
-                let arr = lineArr.map(line => {
+                let arr = lineArr.map((line) => {
                     return line.split(' : ')[1]?.trim()
                 })
 
-                let name, pid, ppid, path;
-                [name, pid, ppid, path] = arr
+                let name, pid, ppid, path
+                ;[name, pid, ppid, path] = arr
                 return { name, pid, ppid, path }
             })
             return list

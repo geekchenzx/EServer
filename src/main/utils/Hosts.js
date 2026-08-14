@@ -1,6 +1,6 @@
-import GetPath from "@/shared/helpers/GetPath";
-import {EOL} from "os";
-import FileUtil from "@/main/utils/FileUtil";
+import GetPath from '@/shared/helpers/GetPath'
+import { EOL } from 'os'
+import FileUtil from '@/main/utils/FileUtil'
 import FsUtil from '@/main/utils/FsUtil'
 
 export default class Hosts {
@@ -9,23 +9,23 @@ export default class Hosts {
      * @param domain {string}
      */
     static async add(domain) {
-        let path = GetPath.getHostsPath();
-        let text = await FileUtil.ReadAll(path);
+        let path = GetPath.getHostsPath()
+        let text = await FileUtil.ReadAll(path)
 
-        let domainRegx = this.getDomainRegExp(domain);
+        let domainRegx = this.getDomainRegExp(domain)
         if (text.match(domainRegx)) {
-            return;
+            return
         }
 
-        let matches = text.match(/\n$/);
-        let appendText = matches ? '' : EOL;
+        let matches = text.match(/\n$/)
+        let appendText = matches ? '' : EOL
 
-        appendText += `127.0.0.1 ${domain}${EOL}`;
+        appendText += `127.0.0.1 ${domain}${EOL}`
 
-        if (await FileUtil.Exists(path) && !await FsUtil.CanReadWrite(path)) {
+        if ((await FileUtil.Exists(path)) && !(await FsUtil.CanReadWrite(path))) {
             await FsUtil.ChmodReadWrite(path)
         }
-        await FileUtil.Append(path, appendText);
+        await FileUtil.Append(path, appendText)
     }
 
     /**
@@ -34,20 +34,20 @@ export default class Hosts {
      */
     static async delete(domain) {
         if (domain === 'localhost') return
-        let path = GetPath.getHostsPath();
-        if (!await FileUtil.Exists(path)) {
-            return;
+        let path = GetPath.getHostsPath()
+        if (!(await FileUtil.Exists(path))) {
+            return
         }
-        if (!await FsUtil.CanReadWrite(path)) {
+        if (!(await FsUtil.CanReadWrite(path))) {
             await FsUtil.ChmodReadWrite(path)
         }
-        let text = await FileUtil.ReadAll(path);
-        let domainRegx = this.getDomainRegExp(domain);
-        text = text.replaceAll(domainRegx, '');
-        await FileUtil.WriteAll(path, text);
+        let text = await FileUtil.ReadAll(path)
+        let domainRegx = this.getDomainRegExp(domain)
+        text = text.replaceAll(domainRegx, '')
+        await FileUtil.WriteAll(path, text)
     }
 
     static getDomainRegExp(domain) {
-        return new RegExp('.*127\\.0\\.0\\.1.*' + domain.replaceAll('.', '\\.') + '\\s*', 'g');
+        return new RegExp('.*127\\.0\\.0\\.1.*' + domain.replaceAll('.', '\\.') + '\\s*', 'g')
     }
 }

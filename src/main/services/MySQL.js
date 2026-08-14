@@ -1,11 +1,11 @@
-import path from "path";
-import GetDataPath from "@/shared/helpers/GetDataPath";
-import Command from "@/main/utils/Command";
-import ProcessExtend from "@/main/utils/ProcessExtend";
-import {sleep} from "@/shared/utils/utils";
-import child_process from "child_process";
-import FileUtil from "@/main/utils/FileUtil";
-import TcpProcess from "@/main/utils/TcpProcess";
+import path from 'path'
+import GetDataPath from '@/shared/helpers/GetDataPath'
+import Command from '@/main/utils/Command'
+import ProcessExtend from '@/main/utils/ProcessExtend'
+import { sleep } from '@/shared/utils/utils'
+import child_process from 'child_process'
+import FileUtil from '@/main/utils/FileUtil'
+import TcpProcess from '@/main/utils/TcpProcess'
 import { isWindows } from '@/main/utils/utils'
 
 export default class MySQL {
@@ -15,9 +15,9 @@ export default class MySQL {
      * @returns {Promise<void>}
      */
     static async initData(version) {
-        let mysqlPath = GetDataPath.getMysqlDir(version);
-        let command = `${this.getMySQLDFilePath(version)} --defaults-file=${this.getConfFilePath(version)} --initialize`;
-        await Command.exec(command, {cwd: mysqlPath});
+        let mysqlPath = GetDataPath.getMysqlDir(version)
+        let command = `${this.getMySQLDFilePath(version)} --defaults-file=${this.getConfFilePath(version)} --initialize`
+        await Command.exec(command, { cwd: mysqlPath })
     }
 
     /**
@@ -28,31 +28,31 @@ export default class MySQL {
      */
     static async resetPassword(version, password) {
         if (!password) {
-            password = 'root';
+            password = 'root'
         }
-        let resetCommand;
+        let resetCommand
         switch (version) {
             case '5.7':
             case '8.0':
-                resetCommand = `ALTER USER 'root'@'localhost' IDENTIFIED BY '${password}';`;
-                break;
+                resetCommand = `ALTER USER 'root'@'localhost' IDENTIFIED BY '${password}';`
+                break
             default:
         }
-        let mysqlPath = GetDataPath.getMysqlDir(version);
-        let resetPwdPath = path.join(mysqlPath, 'reset-pwd.txt');
-        await FileUtil.WriteAll(resetPwdPath, resetCommand);
+        let mysqlPath = GetDataPath.getMysqlDir(version)
+        let resetPwdPath = path.join(mysqlPath, 'reset-pwd.txt')
+        await FileUtil.WriteAll(resetPwdPath, resetCommand)
 
-        let confFilePath = this.getConfFilePath(version);
+        let confFilePath = this.getConfFilePath(version)
         let confText = await FileUtil.ReadAll(confFilePath)
         let portMatch = confText.match(/\[mysqld].*?port\s*=\s*(\d+)/s)
-        let port = portMatch ? portMatch[1] : 3306;
+        let port = portMatch ? portMatch[1] : 3306
 
-        let oldPid = await TcpProcess.getPidByPort(port);
+        let oldPid = await TcpProcess.getPidByPort(port)
         if (oldPid) {
             await ProcessExtend.kill(oldPid, true)
         }
 
-        await sleep(100);
+        await sleep(100)
 
         const args = [`--defaults-file=${confFilePath}`, `--init-file=${resetPwdPath}`]
         const mysqldPath = this.getMySQLDFilePath(version)
