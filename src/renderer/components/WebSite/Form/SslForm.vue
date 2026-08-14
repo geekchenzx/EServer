@@ -1,22 +1,15 @@
 <template>
-  <a-form
-    ref="formRef"
-    :model="formData"
-    name="ssl"
-    autocomplete="off"
-    :label-col="{ span: labelColSpan }"
-    :wrapper-col="{ span: wrapperColSpan }"
-  >
+  <a-form ref="formRef" :model="formData" name="ssl" autocomplete="off" :label-col="{ span: labelColSpan }" :wrapper-col="{ span: wrapperColSpan }">
     <a-form-item :label="t('Port')" name="port" :rules="[{ required: true, type: 'number', min: 1, max: 65535 }]">
       <a-input-number v-model:value="formData.port" min="1" max="65535" />
     </a-form-item>
 
     <a-form-item :label="mt('Certificate')" name="certPath" :rules="certRules">
-      <input-open-file-dialog v-model:value="formData.certPath" :toForwardSlash="true" />
+      <input-open-file-dialog v-model:value="formData.certPath" :to-forward-slash="true" />
     </a-form-item>
 
     <a-form-item label="Key" name="keyPath" :rules="keyRules">
-      <input-open-file-dialog v-model:value="formData.keyPath" :toForwardSlash="true" />
+      <input-open-file-dialog v-model:value="formData.keyPath" :to-forward-slash="true" />
     </a-form-item>
 
     <a-form-item :label="mt('Force', 'ws') + 'Https'" name="isForceHttps">

@@ -1,21 +1,21 @@
 <template>
   <a-modal
+    v-model:open="visible"
     :title="mt('Add', 'ws', 'Website')"
     :ok-text="t('Submit')"
     :cancel-text="t('Cancel')"
-    @ok="addWebClick"
-    v-model:open="visible"
     centered
-    :maskClosable="false"
+    :mask-closable="false"
     :confirm-loading="submitting"
     class="left-tabs-modal"
+    @ok="addWebClick"
   >
     <div class="modal-content">
-      <a-tabs tabPosition="left" v-model:activeKey="activeKey" class="tabs">
+      <a-tabs v-model:active-key="activeKey" tab-position="left" class="tabs">
         <a-tab-pane key="basicSetting" :tab="t('Basic')">
           <a-form ref="formRef" :model="formData" name="basic" autocomplete="off" :label-col="{ span: labelColSpan }" :wrapper-col="{ span: wrapperColSpan }">
             <a-form-item :label="t('DomainName') + ''" name="serverName" :rules="[{ required: true, message: t('cannotBeEmpty') }]">
-              <a-input v-model:value="formData.serverName" @change="serverNameChange" spellcheck="false" />
+              <a-input v-model:value="formData.serverName" spellcheck="false" @change="serverNameChange" />
             </a-form-item>
 
             <a-form-item :label="t('Port')" name="port" :rules="[{ required: true, type: 'number', min: 1, max: 65535 }]">
@@ -23,15 +23,14 @@
             </a-form-item>
 
             <a-form-item :label="t('RootPath')" name="rootPath" :rules="rootPathRules">
-              <input-open-dir-dialog v-model:value="formData.rootPath" :toForwardSlash="true"></input-open-dir-dialog>
+              <input-open-dir-dialog v-model:value="formData.rootPath" :to-forward-slash="true"></input-open-dir-dialog>
             </a-form-item>
 
             <a-form-item :label="'PHP' + mt('ws', 'Version')" name="phpVersion">
-              <a-select style="width: 180px;" v-model:value="formData.phpVersion" :options="phpOpts"/>
+              <a-select v-model:value="formData.phpVersion" style="width: 180px" :options="phpOpts" />
               <a-tooltip title="Open the nginx php config directory">
-                <span class='icon-wrapper' @click='openWebPhpConfigDir'><FolderOpenFilled class='icon' /></span>
+                <span class="icon-wrapper" @click="openWebPhpConfigDir"><FolderOpenFilled class="icon" /></span>
               </a-tooltip>
-
             </a-form-item>
 
             <a-form-item :label="mt('Sync', 'ws') + 'hosts'" name="syncHosts">
@@ -166,7 +165,7 @@ const addWeb = async (websiteInfo) => {
   if (Settings.get('AutoStartAndRestartServer') && ServerService.isRunning('Nginx')) {
     ServerService.restart('Nginx')
     if (phpVersion) {
-      const option = phpOpts.find(item => item.value === phpVersion)
+      const option = phpOpts.find((item) => item.value === phpVersion)
       const phpName = option.isCustom ? option.label : ChildAppExtend.getPhpName(phpVersion)
       ServerService.restart(phpName)
     }

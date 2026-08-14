@@ -1,12 +1,7 @@
 <template>
   <a-form name="rewrite" :label-col="{ span: 0 }" :wrapper-col="{ span: 24 }" autocomplete="off">
     <a-form-item label="">
-      <a-select
-        v-model:value="rewriteSelected"
-        :options="rewriteList"
-        style="width: 120px"
-        @change="rewriteSelectChange"
-      />
+      <a-select v-model:value="rewriteSelected" :options="rewriteList" style="width: 120px" @change="rewriteSelectChange" />
     </a-form-item>
     <a-form-item label="">
       <a-textarea v-model:value="content" :auto-size="{ minRows: 10, maxRows: 10 }" />
