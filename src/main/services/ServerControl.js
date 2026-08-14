@@ -60,7 +60,9 @@ export default class ServerControl {
         if (!item.ServerPort) {
             return
         }
-        for (let i = 0; i < 60; i++) {
+        const timeoutSeconds = item.StartTimeoutSeconds ?? 60
+        const deadline = Date.now() + timeoutSeconds * 1000
+        while (Date.now() < deadline) {
             const pid = await TcpProcess.getPidByPort(item.ServerPort)
             if (pid) {
                 return
@@ -72,7 +74,8 @@ export default class ServerControl {
         }
         await ProcessExtend.kill(item.pid, true)
         item.isRunning = false
-        throw new Error(`${item.Name} 启动超时，端口 ${item.ServerPort} 未打开！`)
+        const errMsg = item.errMsg ? `，${String(item.errMsg).trim()}` : ''
+        throw new Error(`${item.Name} 启动超时，端口 ${item.ServerPort} 未打开！${errMsg}`)
     }
 
     /**
