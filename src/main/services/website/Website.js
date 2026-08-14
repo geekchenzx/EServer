@@ -41,6 +41,10 @@ export default class Website {
         return await NginxWebsite.getRewrite(confName)
     }
 
+    static getConfName(serverName, port) {
+        return Nginx.getWebsiteConfName(serverName, port)
+    }
+
     static getConfPath(confName) {
         return Nginx.getWebsiteConfPath(confName)
     }
