@@ -1,11 +1,12 @@
 import { debugLog } from '@/main/utils/utils'
 import ProcessExtend from '@/main/utils/ProcessExtend'
 import ChildApp from '@/main/services/childApp/ChildApp'
-import { parseTemplateStrings } from '@/shared/utils/utils'
+import { parseTemplateStrings, sleep } from '@/shared/utils/utils'
 import child_process from 'child_process'
 import path from 'path'
 import FileUtil from '@/main/utils/FileUtil'
 import GetDataPath from '@/shared/helpers/GetDataPath'
+import TcpProcess from '@/main/utils/TcpProcess'
 
 export default class ServerControl {
     /**
@@ -47,6 +48,31 @@ export default class ServerControl {
         debugLog(`${path.basename(ctrlProcessPath)},pid ${childProcess.pid}`)
 
         item.pid = childProcess.pid
+        await ServerControl.waitForStart(item)
+    }
+
+    /**
+     * 等待服务端口监听，确保服务真正启动完成后才返回
+     * @param item {ChildAppItem}
+     * @returns {Promise<void>}
+     */
+    static async waitForStart(item) {
+        if (!item.ServerPort) {
+            return
+        }
+        for (let i = 0; i < 60; i++) {
+            const pid = await TcpProcess.getPidByPort(item.ServerPort)
+            if (pid) {
+                return
+            }
+            if (!item.isRunning) {
+                break
+            }
+            await sleep(500)
+        }
+        await ProcessExtend.kill(item.pid, true)
+        item.isRunning = false
+        throw new Error(`${item.Name} 启动超时，端口 ${item.ServerPort} 未打开！`)
     }
 
     /**
