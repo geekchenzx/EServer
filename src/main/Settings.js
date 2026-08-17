@@ -62,7 +62,8 @@ export default class Settings {
             WebsiteDir: GetDataPath.getWebsiteDir(),
             OneClickServerList: ['Nginx', 'PHP-FPM', 'MySQL-5.7'],
             AutoStartAndRestartServer: true,
-            AfterOpenAppStartServer: false
+            AfterOpenAppStartServer: false,
+            AutoLaunch: false
         }
     }
 
