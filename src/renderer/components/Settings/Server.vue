@@ -10,6 +10,12 @@
       ></a-select>
     </div>
 
+    <div class="settings-card-row flex-vertical-center">
+      <a-switch v-model:checked="store.settings.AutoLaunch" class="settings-switch"
+                @change="changeAutoLaunch" />
+      <span>{{ t('autoLaunchText') }}</span>
+    </div>
+
     <div class="settings-card-row" v-if="isWindows">
       <a-flex gap="small" align="center">
         <span>Windows Service：</span>
@@ -66,6 +72,12 @@ const oneClickServerChange = () => {
 }
 const changeAutoStartAndRestartServer = () => {
   store.setSettings('AutoStartAndRestartServer')
+}
+const changeAutoLaunch = async () => {
+  await store.setSettings('AutoLaunch', async () => {
+    const res = await window.electron.ipcRenderer.invoke('call', 'appSetAutoLaunch', store.settings.AutoLaunch)
+    return !!res
+  })
 }
 const changeAfterOpenAppStartServer = () => {
   store.setSettings('AfterOpenAppStartServer')
