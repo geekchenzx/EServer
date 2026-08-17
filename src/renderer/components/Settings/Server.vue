@@ -45,6 +45,8 @@ import { useMainStore } from '@/renderer/store'
 import { storeToRefs } from 'pinia'
 import { mt, t } from '@/renderer/utils/i18n'
 import { createAsyncComponent } from '@/renderer/utils/utils'
+import MessageBox from '@/renderer/utils/MessageBox'
+import Settings from '@/main/Settings'
 import { message } from 'ant-design-vue'
 import { computed } from 'vue'
 import { isWindows } from '@/main/utils/utils'
@@ -74,10 +76,16 @@ const changeAutoStartAndRestartServer = () => {
   store.setSettings('AutoStartAndRestartServer')
 }
 const changeAutoLaunch = async () => {
-  await store.setSettings('AutoLaunch', async () => {
+  const originVal = store.settings.AutoLaunch
+  try {
     const res = await window.electron.ipcRenderer.invoke('call', 'appSetAutoLaunch', store.settings.AutoLaunch)
-    return !!res
-  })
+    const newVal = !!res
+    store.settings.AutoLaunch = newVal
+    Settings.set('AutoLaunch', newVal)
+  } catch (error) {
+    store.settings.AutoLaunch = originVal
+    MessageBox.error(error.message ?? error, t('errorOccurredDuring', [t('set')]))
+  }
 }
 const changeAfterOpenAppStartServer = () => {
   store.setSettings('AfterOpenAppStartServer')

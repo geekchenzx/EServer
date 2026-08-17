@@ -15,7 +15,7 @@ export default class AppAutoLaunch {
         AppAutoLaunch.#_instance = new AutoLaunch({
             name: 'EServer',
             path: app.getPath('exe'),
-            //开发模式下 isEnabled 偶发返回 false，强制再读一次
+            // 启动时不隐藏主窗口
             isHidden: false
         })
         return AppAutoLaunch.#_instance
@@ -52,3 +52,4 @@ export default class AppAutoLaunch {
         return await instance.isEnabled()
     }
 }
+
