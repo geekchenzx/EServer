@@ -7,6 +7,8 @@ import '@/main/ipcListen'
 import { extendPrototype, sleep } from '@/shared/utils/utils'
 import I18n from '@/main/i18n/I18n'
 import Service from '@/main/Service'
+import Settings from '@/main/Settings'
+import AppAutoLaunch from '@/main/utils/AutoLaunch'
 
 let mainWindow
 const serviceArg = process.argv.find((item) => ['--service=start', '--service=stop'].includes(item))
@@ -73,10 +75,24 @@ function onReady() {
             await sleep(1000)
             app.exit()
         } else {
+            await syncAutoLaunch()
             createMainWindow()
             Store.initRenderer()
         }
     })
+}
+
+async function syncAutoLaunch() {
+    try {
+        AppAutoLaunch.init(app)
+        const settingVal = !!Settings.get('AutoLaunch')
+        const systemVal = await AppAutoLaunch.isEnabled()
+        if (settingVal !== systemVal) {
+            Settings.set('AutoLaunch', systemVal)
+        }
+    } catch (e) {
+        console.warn('[AutoLaunch] 启动同步失败:', e?.message ?? e)
+    }
 }
 
 function onRunning() {
