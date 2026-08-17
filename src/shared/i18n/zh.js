@@ -191,5 +191,6 @@ export default {
     Minutes: '分钟',
     Seconds: '秒',
     Days: '天',
-    Weeks: '周'
+    Weeks: '周',
+    autoLaunchText: '开机自启'
 }

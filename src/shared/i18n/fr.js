@@ -191,5 +191,6 @@ export default {
     Minutes: 'Minutes',
     Seconds: 'Secondes',
     Days: 'Jours',
-    Weeks: 'Semaines'
+    Weeks: 'Semaines',
+    autoLaunchText: 'Lancement automatique au démarrage du système'
 }
