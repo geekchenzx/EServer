@@ -2,6 +2,7 @@ import { app, ipcMain } from 'electron'
 import { callStatic } from '@/main/common/call'
 import Installer from '@/main/services/childApp/Installer'
 import Downloader from 'electron-dl-downloader'
+import AppAutoLaunch from '@/main/utils/AutoLaunch'
 
 ipcMain.handle('call', async (event, funName, ...args) => {
     return await functions[funName](event, ...args)
@@ -21,6 +22,14 @@ const functions = {
     appRestart: async () => {
         app.relaunch()
         app.exit()
+    },
+    appSetAutoLaunch: async (event, enabled) => {
+        if (enabled) {
+            await AppAutoLaunch.enable()
+        } else {
+            await AppAutoLaunch.disable()
+        }
+        return await AppAutoLaunch.isEnabled()
     },
     fileGetIcon: async (event, path, options) => {
         return await app.getFileIcon(path, options)
