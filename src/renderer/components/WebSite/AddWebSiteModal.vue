@@ -43,7 +43,7 @@
           <rewrite-form v-model="rewriteContent" />
         </a-tab-pane>
 
-        <a-tab-pane key="sslSetting" tab="SSL">
+        <a-tab-pane key="sslSetting" tab="SSL" force-render>
           <ssl-form ref="sslFormRef" :model-value="sslData" :optional="true" />
         </a-tab-pane>
       </a-tabs>
@@ -106,12 +106,14 @@ const addWebClick = async () => {
   try {
     values = await formRef.value.validate()
   } catch (errorInfo) {
+    activeKey.value = 'basicSetting'
     console.log('Validate Failed:', errorInfo)
     return
   }
   try {
-    await sslFormRef.value.validate()
+    await sslFormRef.value?.validate()
   } catch (errorInfo) {
+    activeKey.value = 'sslSetting'
     console.log('Validate Failed:', errorInfo)
     return
   }
