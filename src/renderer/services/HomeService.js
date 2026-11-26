@@ -11,6 +11,7 @@ import OneClick from '@/shared/helpers/OneClick'
 
 const store = useMainStore()
 const { serverList } = storeToRefs(store)
+let oneClickStarting = false
 
 export default class HomeService {
     static async startServerClick(item) {
@@ -86,8 +87,16 @@ export default class HomeService {
         item.btnLoading = false
     }
 
-    static oneClickStart() {
-        OneClick.handle(HomeService.startServerClick, serverList.value)
+    static async oneClickStart() {
+        if (oneClickStarting) {
+            return
+        }
+        oneClickStarting = true
+        try {
+            await OneClick.handle(HomeService.startServerClick, serverList.value)
+        } finally {
+            oneClickStarting = false
+        }
     }
 
     static oneClickStop() {

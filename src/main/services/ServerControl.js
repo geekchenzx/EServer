@@ -3,6 +3,7 @@ import ProcessExtend from '@/main/utils/ProcessExtend'
 import ChildApp from '@/main/services/childApp/ChildApp'
 import { parseTemplateStrings, sleep } from '@/shared/utils/utils'
 import child_process from 'child_process'
+import fsPromises from 'fs/promises'
 import path from 'path'
 import FileUtil from '@/main/utils/FileUtil'
 import GetDataPath from '@/shared/helpers/GetDataPath'
@@ -62,20 +63,70 @@ export default class ServerControl {
         }
         const timeoutSeconds = item.StartTimeoutSeconds ?? 60
         const deadline = Date.now() + timeoutSeconds * 1000
+        let exitedEarly = false
         while (Date.now() < deadline) {
             const pid = await TcpProcess.getPidByPort(item.ServerPort)
             if (pid) {
                 return
             }
             if (!item.isRunning) {
+                exitedEarly = true
                 break
             }
             await sleep(500)
         }
-        await ProcessExtend.kill(item.pid, true)
-        item.isRunning = false
-        const errMsg = item.errMsg ? `，${String(item.errMsg).trim()}` : ''
-        throw new Error(`${item.Name} 启动超时，端口 ${item.ServerPort} 未打开！${errMsg}`)
+        if (!exitedEarly && item.KillOnStartTimeout === false) {
+            throw new Error(`${item.Name} 启动时间较长（${timeoutSeconds}s 内端口 ${item.ServerPort} 尚未就绪），仍在后台初始化，请稍后查看状态或日志！`)
+        }
+        if (!exitedEarly) {
+            await ProcessExtend.kill(item.pid, true)
+            item.isRunning = false
+        }
+        const errDetail = await ServerControl.getStartErrorDetail(item)
+        const reason = exitedEarly ? '启动失败，进程已退出' : `启动超时，端口 ${item.ServerPort} 未打开`
+        throw new Error(`${item.Name} ${reason}！${errDetail}`)
+    }
+
+    static async getStartErrorDetail(item) {
+        const stderrMsg = item.errMsg ? String(item.errMsg).trim() : ''
+        if (stderrMsg) {
+            return `，${stderrMsg}`
+        }
+        const extraFiles = Array.isArray(item.ExtraFiles) ? item.ExtraFiles : []
+        for (const extra of extraFiles) {
+            if (!extra?.Path || !extra.Path.endsWith('.log')) continue
+            const logPath = item.IsCustom ? extra.Path : ChildApp.getCommonPath(item, extra.Path)
+            const tailErr = await ServerControl.readRecentLogErrors(logPath)
+            if (tailErr) {
+                return `，${tailErr}`
+            }
+        }
+        return ''
+    }
+
+    static async readRecentLogErrors(logPath) {
+        let fh
+        try {
+            const stat = await fsPromises.stat(logPath)
+            if (!stat.size) return ''
+            const readSize = Math.min(stat.size, 32 * 1024)
+            const buffer = Buffer.alloc(readSize)
+            fh = await fsPromises.open(logPath, 'r')
+            await fh.read(buffer, 0, readSize, stat.size - readSize)
+            const lines = buffer
+                .toString('utf8')
+                .split(/\r?\n/)
+                .map((line) => line.trim())
+                .filter(Boolean)
+                .slice(-20)
+            const errorLines = lines.filter((line) => /\[ERROR]|fatal|error/i.test(line))
+            const picked = (errorLines.length ? errorLines : lines).slice(-3)
+            return picked.join('\n')
+        } catch {
+            return ''
+        } finally {
+            await fh?.close()
+        }
     }
 
     /**
