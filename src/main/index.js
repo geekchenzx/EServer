@@ -5,6 +5,7 @@ import Store from 'electron-store'
 import MainWindow from '@/main/MainWindow'
 import '@/main/ipcListen'
 import { extendPrototype, sleep } from '@/shared/utils/utils'
+import { isWindows } from '@/main/utils/utils'
 import I18n from '@/main/i18n/I18n'
 import Service from '@/main/Service'
 import Settings from '@/main/Settings'
@@ -87,7 +88,18 @@ async function syncAutoLaunch() {
         AppAutoLaunch.init(app)
         const settingVal = !!Settings.get('AutoLaunch')
         const systemVal = await AppAutoLaunch.isEnabled()
-        if (settingVal !== systemVal) {
+        if (settingVal === systemVal) {
+            return
+        }
+        if (isWindows) {
+            // Windows 上以设置项为准，把系统状态对齐到用户意图
+            if (settingVal) {
+                // 升级前只写了注册表 Run 项，没有计划任务，这里补建
+                await AppAutoLaunch.enable()
+            } else {
+                await AppAutoLaunch.disable()
+            }
+        } else {
             Settings.set('AutoLaunch', systemVal)
         }
     } catch (e) {

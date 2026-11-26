@@ -25,11 +25,25 @@
 
 新建 `src/main/utils/AutoLaunch.js`：
 
-- 封装 `auto-launch` 包，单例。
+- 封装 `auto-launch` 包，单例。macOS/Linux 走 `auto-launch`；**Windows 走计划任务**（见下）。
 - 导出 `init(app)`（在 `app.on('ready')` 中调用，传入 `app` 实例与产品名 `EServer`）、`enable()`、`disable()`、`isEnabled()`。
 - `init` 内部 `new AutoLaunch({ name: 'EServer', path: app.getPath('exe') })`。
 - 所有方法返回 Promise；不抛出未捕获错误，将异常向上抛出由调用方处理。
 - 复用 main 进程 utils 目录的现有风格（与 `SystemService.js` 类似）。
+
+#### Windows 为什么不用注册表 Run 项
+
+EServer.exe 的内嵌清单是 `requireAdministrator`（`electron-builder.yml` 的 `win.requestedExecutionLevel`）。注册表 `HKCU\...\CurrentVersion\Run` 登录项由 Explorer 以普通权限拉起，提权请求拿不到交互确认，**进程根本不会被创建**（Shell-Core 日志 9708 记录 PID 0），表现为开关已开但开机不启动。
+
+改用计划任务承载：
+
+- 触发器 `New-ScheduledTaskTrigger -AtLogOn -User <当前用户>`
+- 主体 `New-ScheduledTaskPrincipal -UserId <当前用户> -LogonType Interactive -RunLevel Highest`
+- 导出 XML 应为 `RunLevel=HighestAvailable` + `LogonType=InteractiveToken`：任务计划程序直接给管理员令牌，**不弹 UAC**
+- 任务名 `EServer`，与 Windows 服务 `EServerService` 区分
+- 注册需提权（主进程本身以管理员权限运行，满足要求）
+- 开启/关闭时顺带删除旧机制遗留的 Run 条目（`auto-launch` 在 Windows 上写的正是该位置）
+
 
 ### 修改 Settings 模块
 
@@ -46,7 +60,8 @@
 ### 启动时同步
 
 - `src/main/index.js` 在 `app.on('ready', ...)` 现有 `createMainWindow()` 之前调用 `AutoLaunch.init(app)` 并读取 `Settings.get('AutoLaunch')` 与系统实际 `isEnabled()` 比较：
-  - 若不一致，以系统实际状态为权威回写 Settings（避免第三方工具改动登录项后 UI 与系统长期不一致）。
+  - **Windows**：以设置项为准，把系统状态对齐到用户意图——设置开着但系统没任务则补建（覆盖从旧注册表 Run 项机制升级上来的用户），设置关着但系统有任务则删除。
+  - **macOS/Linux**：沿用以系统实际状态为权威回写 Settings（避免第三方工具改动登录项后 UI 与系统长期不一致）。
 - 该调用放在 `serviceArg` 判断之后，确保 `--service=start/stop` 走系统服务路径时不会被启动逻辑打扰。
 
 ### 修改设置卡片 UI
@@ -78,15 +93,19 @@
   - 调用失败时 `MessageBox.error(t('failedOperation') + ': ' + error.message)`，开关回滚到原值。
   - `isEnabled()` 返回 false 而非抛错时，按“未启用”处理。
 - macOS 上 `auto-launch` 首次启用需要应用被签名或用户授权；开发模式下若 `getPath('exe')` 指向 electron 启动脚本而非 .app，启用可能无效。开发模式下 UI 仍可切换，但日志中提示“开发模式下可能不生效”。
+- Windows 计划任务两条命令的退出码坑（`powershell -c` 下）：
+  - `Unregister-ScheduledTask` 对**不存在**的任务返回非零退出码 → `Command.exec` 抛错、关闭开关失败并弹错误框。命令尾部追加 `if (-not (Get-ScheduledTask -TaskName 'X' -ErrorAction SilentlyContinue)) { exit 0 }` 强制归零。
+  - `Register-ScheduledTask` **不加** `-ErrorAction Stop` 时，注册失败（无权限）**退出码仍为 0** → 开关显示已开启但实际没注册。必须加 `-ErrorAction Stop`。
 
 ## 验证
 
 - `npm run lint` 通过。
 - 手动验证：
-  - Windows：开启后 `reg query HKCU\Software\Microsoft\Windows\CurrentVersion\Run` 看到 EServer 条目；关闭后条目消失。
+  - Windows：开启后 `Get-ScheduledTask -TaskName EServer` 存在，且导出 XML 为 `RunLevel=HighestAvailable` + `LogonType=InteractiveToken` + `LogonTrigger`；关闭后任务消失。同时 `reg query HKCU\Software\Microsoft\Windows\CurrentVersion\Run` **不应**再有 EServer 条目。
   - macOS：开启后 `ls ~/Library/LaunchAgents` 出现 `com.EServer.plist`；关闭后消失。
   - Linux（GNOME）：开启后 `~/.config/autostart/EServer.desktop` 出现；关闭后消失。
-- 验证第三方工具改动登录项后再次启动 EServer，设置项被回写为系统实际状态。
+- Windows 开机验证：重启后 `Microsoft-Windows-Shell-Core/Operational` 中事件 9708 的 PID 不为 0，且 EServer 进程已启动。
+- 验证第三方工具改动登录项后再次启动 EServer：Windows 上设置项为准并把系统状态对齐，macOS/Linux 上设置项被回写为系统实际状态。
 - 开发模式下（`npm run dev`）开关可切换但系统状态可能不变化，符合预期。
 
 ## 涉及文件
